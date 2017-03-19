@@ -18,7 +18,6 @@ Bower:
 ```sh
 bower install classnames --save
 ```
-
 Yarn (note that `yarn add` automatically saves the package to the `dependencies` in `package.json`):
 ```sh
 yarn add classnames
@@ -28,7 +27,7 @@ Use with [Node.js](https://nodejs.org/en/), [Browserify](http://browserify.org/)
 
 ```js
 var classNames = require('classnames');
-classNames('foo', 'bar'); // => 'foo bar'
+classNames.set('foo', 'bar'); // => 'foo bar'
 ```
 
 Alternatively, you can simply include `index.js` on your page with a standalone `<script>` tag and it will export a global `classNames` method, or define the module if you are using RequireJS.
@@ -47,25 +46,25 @@ The `classNames` function takes any number of arguments which can be a string or
 The argument `'foo'` is short for `{ foo: true }`. If the value associated with a given key is falsy, that key won't be included in the output.
 
 ```js
-classNames('foo', 'bar'); // => 'foo bar'
-classNames('foo', { bar: true }); // => 'foo bar'
-classNames({ 'foo-bar': true }); // => 'foo-bar'
-classNames({ 'foo-bar': false }); // => ''
-classNames({ foo: true }, { bar: true }); // => 'foo bar'
-classNames({ foo: true, bar: true }); // => 'foo bar'
+classNames.set('foo', 'bar'); // => 'foo bar'
+classNames.set('foo', { bar: true }); // => 'foo bar'
+classNames.set({ 'foo-bar': true }); // => 'foo-bar'
+classNames.set({ 'foo-bar': false }); // => ''
+classNames.set({ foo: true }, { bar: true }); // => 'foo bar'
+classNames.set({ foo: true, bar: true }); // => 'foo bar'
 
 // lots of arguments of various types
-classNames('foo', { bar: true, duck: false }, 'baz', { quux: true }); // => 'foo bar baz quux'
+classNames.set('foo', { bar: true, duck: false }, 'baz', { quux: true }); // => 'foo bar baz quux'
 
 // other falsy values are just ignored
-classNames(null, false, 'bar', undefined, 0, 1, { baz: null }, ''); // => 'bar 1'
+classNames.set(null, false, 'bar', undefined, 0, 1, { baz: null }, ''); // => 'bar 1'
 ```
 
 Arrays will be recursively flattened as per the rules above:
 
 ```js
 var arr = ['b', { c: true, d: false }];
-classNames('a', arr); // => 'a b c'
+classNames.set('a', arr); // => 'a b c'
 ```
 
 ### Dynamic class names with ES2015
@@ -74,7 +73,7 @@ If you're in an environment that supports [computed keys](http://www.ecma-intern
 
 ```js
 let buttonType = 'primary';
-classNames({ [`btn-${buttonType}`]: true });
+classNames.set({ [`btn-${buttonType}`]: true });
 ```
 
 ### Usage with React.js
@@ -103,7 +102,7 @@ var classNames = require('classnames');
 var Button = React.createClass({
   // ...
   render () {
-    var btnClass = classNames({
+    var btnClass = classNames.set({
       btn: true,
       'btn-pressed': this.state.isPressed,
       'btn-over': !this.state.isPressed && this.state.isHovered
@@ -116,7 +115,7 @@ var Button = React.createClass({
 Because you can mix together object, array and string arguments, supporting optional `className` props is also simpler as only truthy arguments get included in the result:
 
 ```js
-var btnClass = classNames('btn', this.props.className, {
+var btnClass = classNames.set('btn', this.props.className, {
   'btn-pressed': this.state.isPressed,
   'btn-over': !this.state.isPressed && this.state.isHovered
 });
@@ -132,13 +131,11 @@ This version is slower (about 5x) so it is offered as an opt-in.
 To use the dedupe version with Node.js, Browserify, or webpack:
 
 ```js
-var classNames = require('classnames/dedupe');
+var classNames = require('classnames');
 
-classNames('foo', 'foo', 'bar'); // => 'foo bar'
-classNames('foo', { foo: false, bar: true }); // => 'bar'
+classNames.dedupe('foo', 'foo', 'bar'); // => 'foo bar'
+classNames.dedupe('foo', { foo: false, bar: true }); // => 'bar'
 ```
-
-For standalone (global / AMD) use, include `dedupe.js` in a `<script>` tag on your page.
 
 
 ### Alternate `bind` version (for [css-modules](https://github.com/css-modules/css-modules))
@@ -148,7 +145,7 @@ If you are using [css-modules](https://github.com/css-modules/css-modules), or a
 _Note that in ES2015 environments, it may be better to use the "dynamic class names" approach documented above._
 
 ```js
-var classNames = require('classnames/bind');
+var classNames = require('classnames');
 
 var styles = {
   foo: 'abc',
@@ -156,7 +153,7 @@ var styles = {
   baz: 'xyz'
 };
 
-var cx = classNames.bind(styles);
+var cx = classNames.setBound.bind(styles);
 
 var className = cx('foo', ['bar'], { baz: true }); // => "abc def xyz"
 ```
@@ -166,10 +163,10 @@ Real-world example:
 ```js
 /* components/submit-button.js */
 import { Component } from 'react';
-import classNames from 'classnames/bind';
+import classNames from 'classnames';
 import styles from './submit-button.css';
 
-let cx = classNames.bind(styles);
+let cx = classNames.setBound.bind(styles);
 
 export default class SubmitButton extends Component {
   render () {
