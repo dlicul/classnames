@@ -26,8 +26,8 @@ var fixtures = [
 	}
 ];
 
-var local = require('../');
-var dedupe = require('../dedupe');
+var local = require('../').set;
+var dedupe = require('../').dedupe;
 var localPackage = require('../package.json');
 
 try {

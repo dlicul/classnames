@@ -7,33 +7,142 @@
 
 (function () {
 	'use strict';
-
 	var hasOwn = {}.hasOwnProperty;
 
-	function classNames () {
-		var classes = [];
+	var classNames = {
+		set: function () {
+			var classes = [];
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
 
-		for (var i = 0; i < arguments.length; i++) {
-			var arg = arguments[i];
-			if (!arg) continue;
+				var argType = typeof arg;
 
-			var argType = typeof arg;
-
-			if (argType === 'string' || argType === 'number') {
-				classes.push(arg);
-			} else if (Array.isArray(arg)) {
-				classes.push(classNames.apply(null, arg));
-			} else if (argType === 'object') {
-				for (var key in arg) {
-					if (hasOwn.call(arg, key) && arg[key]) {
-						classes.push(key);
+				if (argType === 'string' || argType === 'number') {
+					classes.push(arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.set.apply(null, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
 					}
 				}
 			}
-		}
 
-		return classes.join(' ');
-	}
+			return classes.join(' ');
+		},
+		setBound: function () {
+			var classes = [];
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes.push(this && this[arg] || arg);
+				} else if (Array.isArray(arg)) {
+					classes.push(classNames.setBound.apply(this, arg));
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(this && this[key] || key);
+						}
+					}
+				}
+			}
+
+			return classes.join(' ');
+		},
+		dedupe: (function () {
+			// don't inherit from Object so we can skip hasOwnProperty check later
+			// http://stackoverflow.com/questions/15518328/creating-js-object-with-object-createnull#answer-21079232
+			function StorageObject() {}
+			StorageObject.prototype = Object.create(null);
+
+			function _parseArray (resultSet, array) {
+				var length = array.length;
+
+				for (var i = 0; i < length; ++i) {
+					_parse(resultSet, array[i]);
+				}
+			}
+
+			function _parseNumber (resultSet, num) {
+				resultSet[num] = true;
+			}
+
+			function _parseObject (resultSet, object) {
+				for (var k in object) {
+					if (hasOwn.call(object, k)) {
+						// set value to false instead of deleting it to avoid changing object structure
+						// https://www.smashingmagazine.com/2012/11/writing-fast-memory-efficient-javascript/#de-referencing-misconceptions
+						resultSet[k] = !!object[k];
+					}
+				}
+			}
+
+			var SPACE = /\s+/;
+			function _parseString (resultSet, str) {
+				var array = str.split(SPACE);
+				var length = array.length;
+
+				for (var i = 0; i < length; ++i) {
+					resultSet[array[i]] = true;
+				}
+			}
+
+			function _parse (resultSet, arg) {
+				if (!arg) return;
+				var argType = typeof arg;
+
+				// 'foo bar'
+				if (argType === 'string') {
+					_parseString(resultSet, arg);
+
+				// ['foo', 'bar', ...]
+				} else if (Array.isArray(arg)) {
+					_parseArray(resultSet, arg);
+
+				// { 'foo': true, ... }
+				} else if (argType === 'object') {
+					_parseObject(resultSet, arg);
+
+				// '130'
+				} else if (argType === 'number') {
+					_parseNumber(resultSet, arg);
+				}
+			}
+
+			function _classNames () {
+				// don't leak arguments
+				// https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#32-leaking-arguments
+				var len = arguments.length;
+				var args = Array(len);
+				for (var i = 0; i < len; i++) {
+					args[i] = arguments[i];
+				}
+
+				var classSet = new StorageObject();
+				_parseArray(classSet, args);
+
+				var list = [];
+
+				for (var k in classSet) {
+					if (classSet[k]) {
+						list.push(k)
+					}
+				}
+
+				return list.join(' ');
+			}
+
+			return _classNames;
+		})()
+	};
+
 
 	if (typeof module !== 'undefined' && module.exports) {
 		module.exports = classNames;
